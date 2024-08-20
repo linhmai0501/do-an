@@ -45,3 +45,11 @@
   padding-left:  6rem;
   padding-right:  6rem;
 }
+
+.text-align{
+  text-align: center;
+}
+
+.max-width{
+  max-width: 1400px;
+}

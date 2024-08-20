@@ -56,9 +56,33 @@ const NavBar = () => {
                   exact
                   activeClassName="router-link-exact-active"
                 >
-                  Home
+                  Trang Chủ
                 </NavLink>
               </NavItem>
+              {isAuthenticated && (
+                <NavItem>
+                <NavLink
+                  tag={RouterNavLink}
+                  to="/add-student"
+                  exact
+                  activeClassName="router-link-exact-active"
+                >
+                  Thêm Sinh Viên Vi Phạm
+                </NavLink>
+              </NavItem>
+              )}
+              {isAuthenticated&&(
+                <NavItem>
+                <NavLink
+                  tag={RouterNavLink}
+                  to="/list-student"
+                  exact
+                  activeClassName="router-link-exact-active"
+                >
+                  Danh Sách Vi Phạm
+                </NavLink>
+              </NavItem>
+              )}
               {isAuthenticated && (
                 <NavItem>
                   <NavLink

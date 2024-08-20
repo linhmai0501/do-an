@@ -1,0 +1,68 @@
+.main {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: -20px 0 0 0;
+    padding: 20px;
+}
+.main h2 {
+    text-align: center;
+}
+
+.container-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 1200px; /* Độ rộng tối đa của form */
+    margin: 10px auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    flex: 1 1 45%; /* Chiếm 45% chiều rộng của container-form */
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="time"],
+.form-group select {
+    width: 390px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+
+input[type="text"]::placeholder {
+    color: #999;
+}
+
+.btn-save {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.btn-save:hover {
+    background-color: #0056b3;
+}
+.bg-light{
+    
+}

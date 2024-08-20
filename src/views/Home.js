@@ -1,9 +1,9 @@
-import React, { Fragment,useEffect } from "react";
-import { useHistory } from 'react-router-dom';
+import React, { Fragment, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import Hero from "../components/Hero";
 
 const Home = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Kiểm tra URL hiện tại
@@ -13,15 +13,18 @@ const Home = () => {
     if (code) {
       // Xóa tham số `code` khỏi URL
       url.searchParams.delete('code');
-      history.replace(url.pathname + url.search);
-    }
-  }, [history]);
+      const newUrl = url.pathname + url.search;
 
-  return(
+      // Thay đổi URL mà không làm mới trang
+      navigate(newUrl, { replace: true });
+    }
+  }, [navigate]);
+
+  return (
     <Fragment>
-    <Hero />
-  </Fragment>
-  )
-} ;
+      <Hero />
+    </Fragment>
+  );
+};
 
 export default Home;
