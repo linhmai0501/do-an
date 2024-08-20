@@ -4,11 +4,10 @@ import Paginate from '../components/Paginate'; // Import component phân trang
 import EditStudentModal from '../components/EditStudentModal'; // Import modal chỉnh sửa
 import '../css/footer.css';
 import '../css/listStudent.css';
-import { CSVLink} from "react-csv";
-import { user } from '@nextui-org/theme';
+import { CSVLink } from 'react-csv';
+import Papa from 'papaparse'; // Import papaparse
+
 function ListStudent() {
-  
-  
   const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -17,26 +16,64 @@ function ListStudent() {
   const [isEditModalOpen, setEditModalOpen] = useState(false); // Để kiểm soát việc mở/đóng modal
   const [currentUserRole, setCurrentUserRole] = useState(''); // Vai trò của người dùng
   const [searchTerm, setSearchTerm] = useState(''); // Thêm trạng thái cho tìm kiếm
-
+  const [noResults, setNoResults] = useState(false); // Thêm trạng thái cho không có kết quả
+  const [csvData, setCsvData] = useState([]); // Dữ liệu CSV
 
   useEffect(() => {
-    // Giả sử bạn có một hàm để lấy vai trò người dùng từ Auth0 hoặc API
     fetchCurrentUserRole().then(role => setCurrentUserRole(role));
+    const fetchData = async () => {
+      try {
+        let url = `http://localhost/do-an/searchStudent.php/?page=${currentPage}&size=${pageSize}`;
+        if (searchTerm) {
+          url = `http://localhost/do-an/searchStudent.php/?page=${currentPage}&size=${pageSize}&search=${searchTerm}`;
+        }
 
-    fetch(`http://localhost/do-an/paginate.php/?page=${currentPage}&size=${pageSize}`)
-      .then(response => response.json())
-      .then(data => {
-        setUsers(data.items); // Thay đổi tùy thuộc vào cấu trúc phản hồi từ API
-        setTotalPages(data.totalPages); // Thay đổi tùy thuộc vào cấu trúc phản hồi từ API
-      })
-      .catch(error => console.error('Error:', error));
-  }, [currentPage, pageSize]);
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (searchTerm && data.students.length === 0) {
+          setNoResults(true);
+          setUsers([]);
+          setTotalPages(1);
+        } else {
+          setNoResults(false);
+          setUsers(data.students);
+          setTotalPages(data.totalPages);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    fetchData();
+  }, [currentPage, searchTerm, pageSize]);
 
   const fetchCurrentUserRole = async () => {
     // Thay thế bằng cách lấy vai trò thực tế của người dùng từ Auth0 hoặc API
     // Đây chỉ là ví dụ
     return 'Users'; // Hoặc lấy vai trò thực tế từ API
   };
+
+  const fetchCsvData = async () => {
+    try {
+      const response = await fetch(`http://localhost/do-an/exportAllStudents.php`);
+      const csvText = await response.text(); // Nhận dữ liệu dưới dạng văn bản
+
+      Papa.parse(csvText, {
+        header: true,
+        complete: (results) => {
+          setCsvData(results.data); // Kết quả phân tích cú pháp sẽ là một mảng các đối tượng
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching CSV data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCsvData();
+  }, []);
+
 
   const toggleEditModal = () => {
     setEditModalOpen(!isEditModalOpen);
@@ -45,18 +82,6 @@ function ListStudent() {
   const handleEdit = (user) => {
     setSelectedStudent(user); // Chọn sinh viên để chỉnh sửa
     toggleEditModal(); // Mở modal
-  };
-
-  const handleSearch = (searchTerm) => {
-    const url = `http://localhost/do-an/searchStudent.php?search=${encodeURIComponent(searchTerm)}`;
-    
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-            // Xử lý dữ liệu sinh viên ở đây
-        })
-        .catch(error => console.error('Error:', error));
   };
 
   const handleSave = async (updatedStudent) => {
@@ -119,92 +144,126 @@ function ListStudent() {
     }
   };
 
+  const handleSearch = async () => {
+    try {
+      setCurrentPage(1); // Reset trang về 1 khi tìm kiếm mới
+      const response = await fetch(`http://localhost/do-an/searchStudent.php?page=${currentPage}&size=${pageSize}&search=${searchTerm}`);
+      const data = await response.json();
+
+      if (data.students.length === 0) {
+        setNoResults(true);
+        setUsers([]); // Xóa danh sách sinh viên nếu không có kết quả
+      } else {
+        setNoResults(false);
+        setUsers(data.students);
+        setTotalPages(data.totalPages);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
   return (
     <Fragment>
-
       <div className="user-table-container">
         <h2 style={{ textAlign: 'center', paddingBottom: '20px' }}>Bảng Sinh Viên Vi Phạm</h2>
-      <div className="filter-bar">
-        <div className="buttons">
-
-        <div className="btn-large">
-        <label htmlFor='test' className="btn btn-success">
-        <i className="fa-solid fa-file-import"></i> Import
-        </label>
-        <input id="test" type="file" hidden/>
+        <div className="filter-bar">
+          <div className="buttons">
+            <div className="btn-large">
+              <label htmlFor='test' className="btn btn-success">
+                <i className="fa-solid fa-file-import"></i> Import
+              </label>
+              <input id="test" type="file" hidden/>
+            </div>
+            <CSVLink
+              filename={"students.csv"}
+              className="btn btn-primary"
+              data={csvData}
+              headers={[
+                { label: "Họ tên", key: "full_name" },
+                { label: "Mã Sinh Viên", key: "student_code" },
+                { label: "Ngày Sinh", key: "dob" },
+                { label: "Lớp Sinh Hoạt", key: "class_code" },
+                { label: "Môn Thi", key: "exam_subject" },
+                { label: "Suất Thi", key: "exam_time" },
+                { label: "Phòng Thi", key: "exam_room" },
+                { label: "Hình Thức Vi Phạm", key: "violate" },
+                { label: "Hình Thức Xử Lý", key: "processing" },
+                { label: "Cán Bộ Coi Thi", key: "exam_invigilator1" }
+              ]}
+            >
+              <i className="fa-solid fa-file-arrow-down"></i> Export
+            </CSVLink>
+          </div>
         </div>
-        <CSVLink
-         filename={"users.csv"}
-         className="btn btn-primary"
-         data={users}
-         >
-         <i className="fa-solid fa-file-arrow-down"></i> Export
-         </CSVLink>
 
-          {/* <button className="import-btn">Import Excel</button>
-          <button className="export-btn" >Export Excel</button> */}
+        <div className="search-bar ">
+          <input type="text" className='w-250' placeholder="Tìm mã sinh viên ..." />
+          <input type="text" className='w-250' onChange={(e) => setSearchTerm(e.target.value)} placeholder="Tìm tên sinh viên ..." value={searchTerm} />
+          <input type="date" placeholder="dd/mm/yyyy" className="date-picker w-250" />
+          <input type="text" className='w-250' placeholder="Tìm theo lớp ..." />
+          <button className="search-btn w-250" onClick={handleSearch} >Tìm kiếm</button>
         </div>
-      </div>
 
-      <div className="search-bar ">
-        <input type="text" className='w-250'  placeholder="Tìm mã sinh viên ..." />
-        <input type="text" className='w-250' onChange={(e) => setSearchTerm(e.target.value)} placeholder="Tìm tên sinh viên ..." value={searchTerm} />
-        <input type="date" placeholder="dd/mm/yyyy" className="date-picker w-250" />
-        <input type="text" className='w-250' placeholder="Tìm theo lớp ..." />
-        <button className="search-btn w-250" onClick={handleSearch} >Tìm kiếm</button>
-      </div>
-        <Table>
-          <thead>
-            <tr>
-              <th>Họ tên</th>
-              <th>Mã Sinh Viên</th>
-              <th>Ngày Sinh</th>
-              <th>Lớp Sinh Hoạt</th>
-              <th>Môn Thi</th>
-              <th>Suất Thi</th>
-              <th>Phòng Thi</th>
-              <th>Hình Thức Vi Phạm</th>
-              <th>Hình Thức Xử Lý</th>
-              <th>Cán Bộ Coi Thi </th>
-              <th>Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user, index) => (
-              <tr key={index}>
-                <td>{user.full_name}</td>
-                <td>{user.student_code}</td>
-                <td>{user.dob}</td>
-                <td>{user.class_code}</td>
-                <td>{user.exam_subject}</td>
-                <td>{user.exam_time}</td>
-                <td>{user.exam_room}</td>
-                <td>{user.violate}</td>
-                <td>{user.processing}</td>
-                <td>{user.exam_invigilator1}</td>
-                <td>
-                  {currentUserRole === 'Users' && (
-                    <>
-                      <Button color="warning" onClick={() => handleEdit(user)}>Sửa</Button>
-                      <Button color="danger" onClick={() => handleDelete(user.id)} style={{ marginLeft: '10px' }}>Xóa</Button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-        <div style={{display:'flex',justifyContent:'space-around'}} >
-          <Paginate
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
+        {noResults ? (
+          <p style={{ textAlign: 'center', color: 'red' }}>Không tìm thấy sinh viên</p>
+        ) : (
+          <>
+            <Table>
+              <thead>
+                <tr>
+                  <th>Họ tên</th>
+                  <th>Mã Sinh Viên</th>
+                  <th>Ngày Sinh</th>
+                  <th>Lớp Sinh Hoạt</th>
+                  <th>Môn Thi</th>
+                  <th>Suất Thi</th>
+                  <th>Phòng Thi</th>
+                  <th>Hình Thức Vi Phạm</th>
+                  <th>Hình Thức Xử Lý</th>
+                  <th>Cán Bộ Coi Thi </th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user, index) => (
+                  <tr key={index}>
+                    <td>{user.full_name}</td>
+                    <td>{user.student_code}</td>
+                    <td>{user.dob}</td>
+                    <td>{user.class_code}</td>
+                    <td>{user.exam_subject}</td>
+                    <td>{user.exam_time}</td>
+                    <td>{user.exam_room}</td>
+                    <td>{user.violate}</td>
+                    <td>{user.processing}</td>
+                    <td>{user.exam_invigilator1}</td>
+                    <td>
+                      {currentUserRole === 'Users' && (
+                        <>
+                          <Button color="warning" onClick={() => handleEdit(user)}>Sửa</Button>
+                          <Button color="danger" onClick={() => handleDelete(user.id)} style={{ marginLeft: '10px' }}>Xóa</Button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+
+            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+              <Paginate
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </>
+        )}
       </div>
       <EditStudentModal 
         isOpen={isEditModalOpen} 
