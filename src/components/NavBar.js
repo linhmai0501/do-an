@@ -19,11 +19,6 @@ import {
 } from "reactstrap";
 
 import { useAuth0 } from "@auth0/auth0-react";
-/*
-const handleLogin = () => {
-  window.location.href = 'https://dev-66fdp2ricekq1nxy.us.auth0.com/authorize?client_id=DdYjw3l93rnOBss1dPnme77guFyQ9d67&response_type=token&connection=google-oauth2&redirect_uri=http://localhost:3000&scope=openid%20profile%20email';
-};*/
-
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const {
@@ -43,13 +38,15 @@ const NavBar = () => {
 
   return (
     <div className="nav-container">
+      {isAuthenticated && (
       <Navbar color="light" light expand="md" container={false}>
         <Container>
-          <NavbarBrand className="logo" />
+          {isAuthenticated && (<NavbarBrand className="logo" />)}
           <NavbarToggler onClick={toggle} />
           <Collapse isOpen={isOpen} navbar>
             <Nav className="mr-auto" navbar>
-              <NavItem>
+              {isAuthenticated && (
+                <NavItem>
                 <NavLink
                   tag={RouterNavLink}
                   to="/"
@@ -59,6 +56,7 @@ const NavBar = () => {
                   Trang Chủ
                 </NavLink>
               </NavItem>
+              )}
               {isAuthenticated && (
                 <NavItem>
                 <NavLink
@@ -188,6 +186,7 @@ const NavBar = () => {
           </Collapse>
         </Container>
       </Navbar>
+      )}
     </div>
   );
 };

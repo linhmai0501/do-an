@@ -1,22 +1,24 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { Table, Button } from 'reactstrap';
+import { useNavigate } from 'react-router-dom';
 import Paginate from '../components/Paginate'; // Import component phân trang
-import EditStudentModal from '../components/EditStudentModal'; // Import modal chỉnh sửa
 import '../css/footer.css';
 import '../css/listStudent.css';
 import { CSVLink } from 'react-csv';
 import Papa from 'papaparse'; // Import papaparse
+import initFontAwesome from '../utils/initFontAwesome';
+
+initFontAwesome();
 
 function ListStudent() {
   const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize] = useState(5); // Số lượng sinh viên mỗi trang
-  const [selectedStudent, setSelectedStudent] = useState(null); // Để giữ thông tin sinh viên được chọn để chỉnh sửa
-  const [isEditModalOpen, setEditModalOpen] = useState(false); // Để kiểm soát việc mở/đóng modal
   const [currentUserRole, setCurrentUserRole] = useState(''); // Vai trò của người dùng
-  const [searchTerm, setSearchTerm] = useState(''); // Thêm trạng thái cho tìm kiếm
-  const [noResults, setNoResults] = useState(false); // Thêm trạng thái cho không có kết quả
+  const [searchNameTerm, setSearchNameTerm] = useState(''); // Trạng thái cho tìm kiếm tên sinh viên
+  const [searchCodeTerm, setSearchCodeTerm] = useState(''); // Trạng thái cho tìm kiếm mã sinh viên
+  const [noResults, setNoResults] = useState(false); // Trạng thái cho không có kết quả
   const [csvData, setCsvData] = useState([]); // Dữ liệu CSV
 
   useEffect(() => {
@@ -24,14 +26,14 @@ function ListStudent() {
     const fetchData = async () => {
       try {
         let url = `http://localhost/do-an/searchStudent.php/?page=${currentPage}&size=${pageSize}`;
-        if (searchTerm) {
-          url = `http://localhost/do-an/searchStudent.php/?page=${currentPage}&size=${pageSize}&search=${searchTerm}`;
+        if (searchNameTerm || searchCodeTerm) {
+          url = `http://localhost/do-an/searchStudent.php/?page=${currentPage}&size=${pageSize}&search=${searchNameTerm || searchCodeTerm}`;
         }
 
         const response = await fetch(url);
         const data = await response.json();
 
-        if (searchTerm && data.students.length === 0) {
+        if ((searchNameTerm || searchCodeTerm) && data.students.length === 0) {
           setNoResults(true);
           setUsers([]);
           setTotalPages(1);
@@ -46,11 +48,10 @@ function ListStudent() {
     };
 
     fetchData();
-  }, [currentPage, searchTerm, pageSize]);
+  }, [currentPage, searchNameTerm, searchCodeTerm, pageSize]);
 
   const fetchCurrentUserRole = async () => {
     // Thay thế bằng cách lấy vai trò thực tế của người dùng từ Auth0 hoặc API
-    // Đây chỉ là ví dụ
     return 'Users'; // Hoặc lấy vai trò thực tế từ API
   };
 
@@ -73,37 +74,6 @@ function ListStudent() {
   useEffect(() => {
     fetchCsvData();
   }, []);
-
-
-  const toggleEditModal = () => {
-    setEditModalOpen(!isEditModalOpen);
-  };
-
-  const handleEdit = (user) => {
-    setSelectedStudent(user); // Chọn sinh viên để chỉnh sửa
-    toggleEditModal(); // Mở modal
-  };
-
-  const handleSave = async (updatedStudent) => {
-    try {
-      const response = await fetch(`http://localhost/do-an/updateStudent.php`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedStudent),
-      });
-
-      const result = await response.text();
-      console.log(result);
-
-      // Cập nhật danh sách sinh viên sau khi chỉnh sửa
-      setUsers(users.map(user => (user.id === updatedStudent.id ? updatedStudent : user)));
-      toggleEditModal(); // Đóng modal
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
 
   const handleDelete = async (userId) => {
     if (window.confirm("Bạn có chắc muốn xóa sinh viên này?")) {
@@ -147,7 +117,7 @@ function ListStudent() {
   const handleSearch = async () => {
     try {
       setCurrentPage(1); // Reset trang về 1 khi tìm kiếm mới
-      const response = await fetch(`http://localhost/do-an/searchStudent.php?page=${currentPage}&size=${pageSize}&search=${searchTerm}`);
+      const response = await fetch(`http://localhost/do-an/searchStudent.php?page=${currentPage}&size=${pageSize}&search=${searchNameTerm || searchCodeTerm}`);
       const data = await response.json();
 
       if (data.students.length === 0) {
@@ -163,6 +133,13 @@ function ListStudent() {
     }
   };
 
+  const navigate = useNavigate();
+
+  const displayInfo = (studentId) => {
+    navigate(`/student-info/${studentId}`);
+  };
+  
+
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
@@ -173,12 +150,6 @@ function ListStudent() {
         <h2 style={{ textAlign: 'center', paddingBottom: '20px' }}>Bảng Sinh Viên Vi Phạm</h2>
         <div className="filter-bar">
           <div className="buttons">
-            <div className="btn-large">
-              <label htmlFor='test' className="btn btn-success">
-                <i className="fa-solid fa-file-import"></i> Import
-              </label>
-              <input id="test" type="file" hidden/>
-            </div>
             <CSVLink
               filename={"students.csv"}
               className="btn btn-primary"
@@ -201,12 +172,12 @@ function ListStudent() {
           </div>
         </div>
 
-        <div className="search-bar ">
-          <input type="text" className='w-250' placeholder="Tìm mã sinh viên ..." />
-          <input type="text" className='w-250' onChange={(e) => setSearchTerm(e.target.value)} placeholder="Tìm tên sinh viên ..." value={searchTerm} />
+        <div className="search-bar">
+          <input type="text" className="w-250" placeholder="Tìm mã sinh viên ..." onChange={(e) => setSearchCodeTerm(e.target.value)} value={searchCodeTerm} />
+          <input type="text" className="w-250" placeholder="Tìm tên sinh viên ..." onChange={(e) => setSearchNameTerm(e.target.value)} value={searchNameTerm} />
           <input type="date" placeholder="dd/mm/yyyy" className="date-picker w-250" />
-          <input type="text" className='w-250' placeholder="Tìm theo lớp ..." />
-          <button className="search-btn w-250" onClick={handleSearch} >Tìm kiếm</button>
+          <input type="text" className="w-250" placeholder="Tìm theo lớp ..." />
+          <button className="search-btn w-250" onClick={handleSearch}>Tìm kiếm</button>
         </div>
 
         {noResults ? (
@@ -214,39 +185,39 @@ function ListStudent() {
         ) : (
           <>
             <Table>
-              <thead>
+              <thead style={{ textAlign: 'center' }}>
                 <tr>
                   <th>Họ tên</th>
                   <th>Mã Sinh Viên</th>
-                  <th>Ngày Sinh</th>
+                  <th style={{ display: 'none' }}>Ngày Sinh</th>
                   <th>Lớp Sinh Hoạt</th>
                   <th>Môn Thi</th>
                   <th>Suất Thi</th>
                   <th>Phòng Thi</th>
                   <th>Hình Thức Vi Phạm</th>
-                  <th>Hình Thức Xử Lý</th>
+                  <th style={{ display: 'none' }}>Hình Thức Xử Lý</th>
                   <th>Cán Bộ Coi Thi </th>
                   <th>Thao Tác</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody style={{ textAlign: 'center' }}>
                 {users.map((user, index) => (
                   <tr key={index}>
                     <td>{user.full_name}</td>
                     <td>{user.student_code}</td>
-                    <td>{user.dob}</td>
+                    <td style={{ display: 'none' }}>{user.dob}</td>
                     <td>{user.class_code}</td>
                     <td>{user.exam_subject}</td>
                     <td>{user.exam_time}</td>
                     <td>{user.exam_room}</td>
                     <td>{user.violate}</td>
-                    <td>{user.processing}</td>
+                    <td style={{ display: 'none' }}>{user.processing}</td>
                     <td>{user.exam_invigilator1}</td>
                     <td>
                       {currentUserRole === 'Users' && (
                         <>
-                          <Button color="warning" onClick={() => handleEdit(user)}>Sửa</Button>
                           <Button color="danger" onClick={() => handleDelete(user.id)} style={{ marginLeft: '10px' }}>Xóa</Button>
+                          <Button color="info" onClick={() => displayInfo(user.id)} style={{ marginLeft: '10px' }}><i class="fa fa-info" aria-hidden="true"></i></Button>
                         </>
                       )}
                     </td>
@@ -265,12 +236,6 @@ function ListStudent() {
           </>
         )}
       </div>
-      <EditStudentModal 
-        isOpen={isEditModalOpen} 
-        toggle={toggleEditModal} 
-        student={selectedStudent} 
-        onSave={handleSave} 
-      />
     </Fragment>
   );
 }

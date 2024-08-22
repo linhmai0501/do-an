@@ -66,3 +66,16 @@ input[type="text"]::placeholder {
 .bg-light{
     
 }
+
+.valid-feedback::after {
+    content: '✔'; /* Biểu tượng dấu check */
+    color: #28a745; /* Màu xanh lá cây */
+    margin-left: 0.5rem;
+  }
+  
+  .invalid-feedback::after {
+    content: '✘'; /* Biểu tượng dấu chấm than */
+    color: #dc3545; /* Màu đỏ */
+    margin-left: 0.5rem;
+  }
+  
