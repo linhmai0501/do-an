@@ -1,0 +1,72 @@
+/* Cấu trúc Sidebar */
+.sidebar {
+    height: 100vh; /* Chiều cao 100% của viewport */
+    width: 250px; /* Chiều rộng khi mở */
+    position: fixed; /* Định vị cố định bên trái */
+    left: 0; /* Căn bên trái */
+    top: 0; /* Căn trên cùng */
+    background-color: white; /* Màu nền của sidebar */
+    color: #343a40; /* Màu chữ */
+    transition: width 0.3s ease; /* Hiệu ứng chuyển tiếp khi thay đổi kích thước */
+    z-index: 1000; /* Đảm bảo sidebar nằm trên các thành phần khác */
+  }
+  
+  /* Trạng thái mở của sidebar */
+  .sidebar.open {
+    width: 250px; /* Chiều rộng khi mở */
+  }
+  
+  /* Trạng thái đóng của sidebar */
+  .sidebar.closed {
+    width: 60px; /* Chiều rộng khi đóng */
+  }
+  
+  /* Tiêu đề sidebar */
+  .sidebar-header {
+    display: flex; /* Sử dụng flexbox để căn chỉnh */
+    justify-content: center; /* Căn giữa giữa các phần tử */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    padding: 1rem; /* Padding cho tiêu đề */
+    color: white; /* Màu chữ của tiêu đề */
+  }
+  
+  /* Menu điều hướng */
+  .sidebar-nav {
+    padding: 0; /* Không có padding cho menu */
+    margin-top: 1rem; /* Khoảng cách phía trên */
+    list-style: none; /* Loại bỏ kiểu danh sách */
+  }
+  
+  /* Liên kết trong menu */
+  .sidebar-nav .nav-link {
+    color: #343a40; /* Màu chữ cho liên kết */
+    padding: 0.75rem 1rem; /* Padding cho các liên kết */
+    display: flex; /* Sử dụng flexbox để căn chỉnh icon và tiêu đề */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    transition: background-color 0.3s ease; /* Hiệu ứng chuyển tiếp cho màu nền */
+  }
+  
+  /* Liên kết đang hoạt động */
+  .sidebar-nav .nav-link.active {
+    color: #007bff; /* Màu nền khi liên kết đang hoạt động */
+  }
+  
+  /* Hiệu ứng hover cho liên kết */
+  .sidebar-nav .nav-link:hover {
+    background-color: rgb(244, 241, 241); /* Màu nền khi hover */
+  }
+  
+  /* Icon cho liên kết */
+  .sidebar-nav .nav-link i {
+    margin-right: 10px; /* Khoảng cách giữa icon và tiêu đề */
+  }
+  
+  .main-content {
+    margin-left: 260px; /* Chiều rộng của sidebar khi mở */
+    transition: margin-left 0.3s ease; /* Hiệu ứng chuyển tiếp khi sidebar mở/đóng */
+  }
+  
+  .sidebar.closed + .main-content {
+    margin-left: 60px; /* Chiều rộng khi sidebar đóng */
+  }
+  

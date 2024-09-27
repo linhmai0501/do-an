@@ -1,0 +1,18 @@
+.input-select,
+.input-field {
+  height: 45px; /* Chiều cao đồng nhất */
+  font-size: 16px; /* Kích thước chữ lớn hơn cho dễ đọc */
+  border: 1px solid #ced4da; /* Đường viền chuẩn */
+  border-radius: 4px; /* Bo tròn các góc */
+  padding: 10px; /* Padding bên trong */
+}
+
+.input-select:focus,
+.input-field:focus {
+  border-color: #007bff; /* Đổi màu viền khi focus */
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Hiệu ứng bóng khi focus */
+}
+
+.label {
+  font-weight: bold; /* Làm cho nhãn đậm hơn */
+}
