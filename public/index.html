@@ -8,7 +8,6 @@
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
     <meta name="theme-color" content="#000000" />
-    <meta name="google-signin-client_id" content="870967407366-30ujg0nn7i5gcjbn8p0monc5t2tbe4hs.apps.googleusercontent.com">
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -34,20 +33,10 @@
       rel="stylesheet"
       href="https://cdn.auth0.com/js/auth0-samples-theme/1.0/css/auth0-theme.min.css"
     />
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <title>Calling an API</title>
-    <script src="https://apis.google.com/js/platform.js?onload=triggerGoogleLoaded" async defer></script>
-    <script type="text/javascript">
-        function triggerGoogleLoaded() {
-          console.log("google event loaded");
-            gapi.load('auth2', () => {
-                gapi.auth2.init().then(() => {
-                    // DO NOT ATTEMPT TO RENDER BUTTON UNTIL THE 'Init' PROMISE RETURNS
-                    window.dispatchEvent(new Event('google-loaded'));
-                });
-            });
-        }
-    </script>
   </head>
   <body class="h-100">
     <noscript>You need to enable JavaScript to run this app.</noscript>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "../css/addStudent.css";
 
@@ -18,10 +18,31 @@ const AddStudent = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [examSubjects, setExamSubjects] = useState([]);
+
+  // Giả sử dữ liệu trả về có cấu trúc { data: [...] }
+useEffect(() => {
+  const fetchExamSubjects = async () => {
+    try {
+      const response = await fetch('http://localhost/do-an/getExamSubjects.php');
+      const result = await response.json();
+
+      if (result && Array.isArray(result)) {
+        setExamSubjects(result);
+      } else {
+        console.error('Dữ liệu không có thuộc tính data hoặc không phải là mảng:', result);
+      }
+    } catch (error) {
+      console.error('Error fetching exam subjects:', error);
+    }
+  };
+
+  fetchExamSubjects();
+}, []);
+
 
   const validateForm = () => {
     const newErrors = {};
-    // Kiểm tra các trường nhập và thiết lập lỗi
     if (!formData.full_name) newErrors.full_name = 'Họ và tên là bắt buộc';
     if (!formData.student_code) newErrors.student_code = 'Mã sinh viên là bắt buộc';
     if (!formData.dob) newErrors.dob = 'Ngày sinh là bắt buộc';
@@ -41,16 +62,30 @@ const AddStudent = () => {
     const { id, value } = e.target;
     setFormData(prevState => ({ ...prevState, [id]: value }));
 
-    // Xóa lỗi khi người dùng bắt đầu nhập
     if (value) {
       setErrors(prevErrors => ({ ...prevErrors, [id]: '' }));
+    }
+  };
+
+  // Xử lý khi chọn môn thi
+  const handleSubjectChange = (e) => {
+    const selectedSubjectName = e.target.value;
+    const selectedSubject = examSubjects[0]?.find(subject => subject.subject_name === selectedSubjectName);
+
+    if (selectedSubject) {
+      setFormData(prevState => ({
+        ...prevState,
+        exam_subject: selectedSubject.subject_name,
+        exam_time: selectedSubject.exam_time,
+        exam_room: selectedSubject.exam_room,
+      }));
     }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!validateForm()) return; // Ngăn không cho gửi nếu có lỗi
+    if (!validateForm()) return;
 
     try {
       const response = await fetch('http://localhost/do-an/addStudent.php', {
@@ -61,26 +96,36 @@ const AddStudent = () => {
         body: JSON.stringify(formData),
       });
 
-      const result = await response.text();
-      console.log(result);
+      const result = await response.json();
 
-      setFormData({
-        full_name: '',
-        student_code: '',
-        dob: '',
-        class_code: '',
-        exam_subject: '',
-        exam_time: '',
-        exam_room: '',
-        violate: '',
-        processing: '',
-        exam_invigilator1: '',
-        // exam_invigilator2: ''
-      });
+      if (!result.success) {
+        alert(result.message);
+        if (result.message.includes("Mã sinh viên đã tồn tại")) {
+          setErrors(prevErrors => ({
+            ...prevErrors,
+            student_code: result.message,
+          }));
+        }
+      } else {
+        setFormData({
+          full_name: '',
+          student_code: '',
+          dob: '',
+          class_code: '',
+          exam_subject: '',
+          exam_time: '',
+          exam_room: '',
+          violate: '',
+          processing: '',
+          exam_invigilator1: '',
+        });
 
-      setErrors({}); // Xóa lỗi khi gửi thành công
+        setErrors({});
+        alert(result.message);
+      }
     } catch (error) {
       console.error('Error:', error);
+      alert("Có lỗi xảy ra. Vui lòng thử lại.");
     }
   };
 
@@ -141,18 +186,23 @@ const AddStudent = () => {
         </div>
         <div className="form-group">
           <label htmlFor="exam_subject">Môn thi</label>
-          <input
-            type="text"
+          <select
             id="exam_subject"
             className={`form-control ${errors.exam_subject ? 'is-invalid' : formData.exam_subject ? 'is-valid' : ''}`}
-            placeholder="Nhập tên môn thi"
             value={formData.exam_subject}
-            onChange={handleChange}
-          />
+            onChange={handleSubjectChange}
+          >
+            <option value="">Chọn môn thi</option>
+            {examSubjects[0]?.map((subject) => (
+              <option key={subject.id} value={subject.subject_name}>
+                  {subject.subject_name}
+              </option>
+))}
+          </select>
           {errors.exam_subject && <div className="invalid-feedback">{errors.exam_subject}</div>}
           {formData.exam_subject && !errors.exam_subject && <div className="valid-feedback">LookGood</div>}
         </div>
-        <div className="form-group">
+        <div className="form-group">  
           <label htmlFor="exam_time">Suất thi</label>
           <input
             type="time"

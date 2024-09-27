@@ -48,15 +48,15 @@ function StudentInfo() {
       });
       const result = await response.json();
       if (result.success) {
-        message.success('Student information updated successfully!');
+        message.success('Cập nhật sinh viên thành công');
         setStudent(updatedData);
         setIsEditing(false);
       } else {
-        message.error('Failed to update student information.');
+        message.error('Mã sinh viên đã tồn tại');
       }
     } catch (error) {
       console.error('Error updating student details:', error);
-      message.error('Error updating student information.');
+      message.error('Mã sinh viên đã tồn tại');
     }
   };
 

@@ -7,7 +7,6 @@ import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
 import Home from "./views/Home";
 import Profile from "./views/Profile";
-import ExternalApi from "./views/ExternalApi";
 import { useAuth0 } from "@auth0/auth0-react";
 import ErrorPage from "./views/ErrorPage";
 import Login from "./views/Login";
@@ -16,6 +15,7 @@ import AddStudent from "./views/AddStudent";
 import StudentInfo from "./views/StudentInfo";
 import "./App.css";
 import initFontAwesome from "./utils/initFontAwesome";
+import SendFile from "./views/SendFile";
 
 initFontAwesome();
 
@@ -54,8 +54,8 @@ const App = () => {
             <Route path="/error-page" element={isAuthenticated ? <ErrorPage /> : <Navigate to="/login" />} />
             <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
             <Route path="/add-student" element={isAuthenticated ? <AddStudent /> : <Navigate to="/login" />} />
-            <Route path="/external-api" element={isAuthenticated ? <ExternalApi /> : <Navigate to="/login" />} />
             <Route path="/list-student" element={isAuthenticated ? <ListStudent /> : <Navigate to="/login" />} />
+            <Route path="/sendfiles" element={isAuthenticated ? <SendFile /> : <Navigate to="/login" />} />
             <Route path="/student-info/:id" element={isAuthenticated ? <StudentInfo /> : <Navigate to="/login" />} />
 
           </Routes>
